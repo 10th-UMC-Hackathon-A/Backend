@@ -3,7 +3,7 @@ name: Spring Boot CI/CD
 on:
   push:
     branches:
-      - ci/github-actions-deploy
+      - develop
 
 permissions:
   contents: read
