@@ -1,7 +1,7 @@
-package com.example.umc.domain.panalty.service;
+package com.example.umc.domain.penalty.service;
 
-import com.example.umc.domain.panalty.dto.request.PenaltyReqDto;
-import com.example.umc.domain.panalty.dto.response.PenaltyResDto;
+import com.example.umc.domain.penalty.dto.request.PenaltyReqDto;
+import com.example.umc.domain.penalty.dto.response.PenaltyResDto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
