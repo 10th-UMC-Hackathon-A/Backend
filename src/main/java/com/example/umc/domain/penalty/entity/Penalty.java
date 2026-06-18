@@ -1,4 +1,4 @@
-package com.example.umc.domain.panalty.entity;
+package com.example.umc.domain.penalty.entity;
 
 import com.example.umc.global.common.base.BaseEntity;
 import jakarta.persistence.Column;

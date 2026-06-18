@@ -1,4 +1,4 @@
-package com.example.umc.domain.panalty.dto.request;
+package com.example.umc.domain.penalty.dto.request;
 
 public record PenaltyReqDto(
         String label
