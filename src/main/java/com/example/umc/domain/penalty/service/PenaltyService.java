@@ -10,15 +10,18 @@ import java.util.List;
 public class PenaltyService {
 
     public PenaltyResDto createPenalty(PenaltyReqDto request) {
-        return null;
+        return new PenaltyResDto(1, request.label());
     }
 
     public List<PenaltyResDto> getPenalties() {
-        return null;
+        return List.of(
+                new PenaltyResDto(1, "춤추면서 에어컨 1도 낮추기"),
+                new PenaltyResDto(2, "칠판에 오늘의 온도 적기")
+        );
     }
 
     public PenaltyResDto updatePenalty(Long penaltyId, PenaltyReqDto request) {
-        return null;
+        return new PenaltyResDto(penaltyId.intValue(), request.label());
     }
 
     public void deletePenalty(Long penaltyId) {
