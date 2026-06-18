@@ -1,0 +1,99 @@
+name: Spring Boot CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # GitHub 저장소의 코드를 Actions 실행 환경으로 가져온다.
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # 프로젝트에서 사용하는 Java 21을 설치한다.
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Gradle 환경과 의존성 캐시를 설정한다.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      # Windows에서 만든 gradlew는 Linux 실행 권한이 없을 수 있다.
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      # Spring Boot 실행 JAR를 빌드한다.
+      - name: Build Spring Boot JAR
+        run: ./gradlew clean bootJar -x test
+
+      - name: EC2에 배포
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_USER: ${{ vars.EC2_USER }}
+          EC2_HOST: ${{ vars.EC2_HOST }}
+        run: |
+          set -e
+
+          # GitHub Secret에 저장한 SSH 개인키를 파일로 만든다.
+          printf '%s\n' "$EC2_SSH_KEY" \
+            | tr -d '\r' \
+            > private_key.pem
+
+          chmod 600 private_key.pem
+
+          # plain.jar가 아닌 실행 가능한 Spring Boot JAR를 찾는다.
+          jar_file=$(
+            find build/libs \
+              -maxdepth 1 \
+              -type f \
+              -name '*.jar' \
+              ! -name '*-plain.jar' \
+              | head -n 1
+          )
+
+          if [ -z "$jar_file" ]; then
+            echo "실행 가능한 JAR를 찾을 수 없습니다."
+            exit 1
+          fi
+
+          # 새 JAR를 EC2의 임시 위치로 전송한다.
+          scp \
+            -i private_key.pem \
+            -o StrictHostKeyChecking=no \
+            "$jar_file" \
+            "$EC2_USER@$EC2_HOST:/home/$EC2_USER/app-new.jar"
+
+          # 운영 JAR를 교체하고 Spring Boot 서비스를 재시작한다.
+          ssh \
+            -i private_key.pem \
+            -o StrictHostKeyChecking=no \
+            "$EC2_USER@$EC2_HOST" "
+              sudo /usr/bin/install \
+                -o root \
+                -g root \
+                -m 0644 \
+                /home/$EC2_USER/app-new.jar \
+                /opt/umc/app.jar
+
+              rm -f /home/$EC2_USER/app-new.jar
+
+              sudo /usr/bin/systemctl restart umc
+
+              sleep 15
+
+              systemctl is-active --quiet umc
+            "
+
+          rm -f private_key.pem
