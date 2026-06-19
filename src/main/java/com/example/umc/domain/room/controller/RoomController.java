@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rooms")
-public class RoomController {
+public class RoomController implements RoomControllerDocs {
 
     private final RoomService roomService;
 
