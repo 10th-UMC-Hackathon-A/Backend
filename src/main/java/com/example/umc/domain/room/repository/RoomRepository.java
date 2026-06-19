@@ -2,6 +2,21 @@ package com.example.umc.domain.room.repository;
 
 import com.example.umc.domain.room.entity.Room;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
+    boolean existsByRoomId(Long roomId);
+
+    Room findByRoomIdAndDeletedAtIsNull(Long roomId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            UPDATE Room r
+            SET r.roomName = :roomName
+            WHERE r.roomId = :roomId
+                and r.deletedAt is null
+            """)
+    int updateRoomName(String roomName, Long roomId);
 }
