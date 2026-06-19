@@ -50,7 +50,10 @@ public class RoomService {
         return toRoomResDto(getMyActiveRoom(roomId));
     }
 
+    @Transactional
     public void deleteRoom(Long roomId) {
+        Room room = getMyActiveRoom(roomId);
+        room.delete();
     }
 
     public void participateRoom(ParticipateRoomReqDto request) {
