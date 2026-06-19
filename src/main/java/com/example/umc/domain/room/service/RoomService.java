@@ -44,7 +44,7 @@ public class RoomService {
         int updatedCount = roomRepository.updateRoomName(request.roomName(), room.getRoomId());
 
         if (updatedCount == 0) {
-            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+            throw new RestApiException(GlobalErrorStatus._VALIDATION_ERROR);
         }
 
         return toRoomResDto(getMyActiveRoom(roomId));
