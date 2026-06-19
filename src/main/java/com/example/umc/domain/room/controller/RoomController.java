@@ -73,8 +73,10 @@ public class RoomController implements RoomControllerDocs {
 
     @PostMapping("/vote")
     public BaseResponse<List<VoteStatusResDto>> createVote(
-            @RequestHeader("Authorization") String authorizationHeader,
-            @RequestBody VoteReqDto request
+            @RequestHeader("Authorization")
+            String authorizationHeader,
+            @RequestBody
+            VoteReqDto request
     ) throws Exception {
         return BaseResponse.onSuccess(roomService.vote(authorizationHeader, request));
     }
