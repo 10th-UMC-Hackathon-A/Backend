@@ -3,6 +3,7 @@ package com.example.umc.domain.room.controller;
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
+import com.example.umc.domain.room.dto.response.ParticipantResDto;
 import com.example.umc.domain.room.dto.response.RoomResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
@@ -59,7 +60,7 @@ public interface RoomControllerDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "투표 방 참여 성공")
     })
-    BaseResponse<String> createParticipant(
+    BaseResponse<ParticipantResDto> createParticipant(
             @RequestBody(description = "투표 방 참여 요청 정보", required = true)
             ParticipateRoomReqDto request
     );
@@ -69,9 +70,11 @@ public interface RoomControllerDocs {
             @ApiResponse(responseCode = "200", description = "투표 생성 성공")
     })
     BaseResponse<List<VoteStatusResDto>> createVote(
+            @Parameter(name = "Authorization", description = "Bearer accessToken", in = ParameterIn.HEADER, required = true)
+            String authorizationHeader,
             @RequestBody(description = "투표 생성 요청 정보", required = true)
             VoteReqDto request
-    );
+    ) throws Exception;
 
     @Operation(summary = "투표 현황 조회", description = "투표 방 ID에 해당하는 투표 항목별 집계 현황을 조회합니다.")
     @ApiResponses({

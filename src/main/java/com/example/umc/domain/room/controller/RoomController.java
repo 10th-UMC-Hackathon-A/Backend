@@ -3,6 +3,7 @@ package com.example.umc.domain.room.controller;
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
+import com.example.umc.domain.room.dto.response.ParticipantResDto;
 import com.example.umc.domain.room.dto.response.RoomResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,20 +64,19 @@ public class RoomController implements RoomControllerDocs {
     }
 
     @PostMapping("/participants")
-    public BaseResponse<String> createParticipant(
+    public BaseResponse<ParticipantResDto> createParticipant(
             @RequestBody
             ParticipateRoomReqDto request
     ) {
-        roomService.participateRoom(request);
-        return BaseResponse.onSuccess("투표 방 참여가 완료되었습니다.");
+        return BaseResponse.onSuccess(roomService.participateRoom(request));
     }
 
     @PostMapping("/vote")
     public BaseResponse<List<VoteStatusResDto>> createVote(
-            @RequestBody
-            VoteReqDto request
-    ) {
-        return BaseResponse.onSuccess(roomService.vote(request));
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestBody VoteReqDto request
+    ) throws Exception {
+        return BaseResponse.onSuccess(roomService.vote(authorizationHeader, request));
     }
 
     @GetMapping("/vote")
