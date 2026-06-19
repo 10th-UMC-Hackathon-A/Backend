@@ -37,10 +37,13 @@ public class PenaltyService {
 
     @Transactional
     public PenaltyResDto updatePenalty(Long penaltyId, PenaltyReqDto request) {
-        Penalty penalty = getPenalty(penaltyId);
-        penalty.updatePenaltyName(request.label());
+        int updatedCount = penaltyRepository.updatePenaltyName(penaltyId, request.label());
 
-        return toPenaltyResDto(penalty);
+        if (updatedCount == 0) {
+            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+        }
+
+        return toPenaltyResDto(getPenalty(penaltyId));
     }
 
     @Transactional
