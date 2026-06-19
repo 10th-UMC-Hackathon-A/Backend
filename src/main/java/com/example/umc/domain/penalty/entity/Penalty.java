@@ -28,4 +28,8 @@ public class Penalty extends BaseEntity {
 
     @Column(name = "penalty_name", nullable = false)
     private String penaltyName;
+
+    public void updatePenaltyName(String penaltyName) {
+        this.penaltyName = penaltyName;
+    }
 }
