@@ -139,11 +139,25 @@ public class RoomService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<VoteStatusWithAliasResDto> getVoteStatusWithMembers(Long roomId) {
-        return List.of(
-                new VoteStatusWithAliasResDto("추워요", List.of("추워요1", "추워요2", "추워요3")),
-                new VoteStatusWithAliasResDto("더워요", List.of("더워요1", "더워요2"))
-        );
+        Room room = getMyActiveRoom(roomId);
+        Map<String, List<String>> nicknamesByLabel = voteUserRepository.findByRoom(room).stream()
+                .collect(Collectors.groupingBy(
+                        voteUser -> voteUser.getVoteType().getLabel(),
+                        LinkedHashMap::new,
+                        Collectors.mapping(
+                                voteUser -> voteUser.getUser().getNickname(),
+                                Collectors.toList()
+                        )
+                ));
+
+        return voteTypeRepository.findAll().stream()
+                .map(voteType -> new VoteStatusWithAliasResDto(
+                        voteType.getLabel(),
+                        nicknamesByLabel.getOrDefault(voteType.getLabel(), List.of())
+                ))
+                .toList();
     }
 
     private User getUserFromAuthorizationHeader(String authorizationHeader) {
