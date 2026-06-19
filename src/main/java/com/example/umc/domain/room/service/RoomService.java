@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -100,16 +101,42 @@ public class RoomService {
     }
 
     @Transactional
-    public List<VoteStatusResDto> vote(String authorizationHeader, VoteReqDto request) throws Exception{
-        throw new Exception("구현 해야함!");
+    public List<VoteStatusResDto> vote(String authorizationHeader, VoteReqDto request) {
+        User user = getUserFromAuthorizationHeader(authorizationHeader);
+        Room room = getMyActiveRoom(request.roomId());
+        VoteType voteType = voteTypeRepository.findByLabel(request.position())
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+
+        if (!roomUserRepository.existsByRoomAndUser(room, user)) {
+            throw new RestApiException(AuthErrorStatus.INVALID_ROLE);
+        }
+
+        voteUserRepository.deleteByRoomAndUser(room, user);
+        voteUserRepository.save(VoteUser.builder()
+                .room(room)
+                .user(user)
+                .voteType(voteType)
+                .build());
+
+        return getVoteStatus(room.getRoomId());
     }
 
     @Transactional(readOnly = true)
     public List<VoteStatusResDto> getVoteStatus(Long roomId) {
-        return List.of(
-                new VoteStatusResDto("추워요", 3),
-                new VoteStatusResDto("더워요", 2)
-        );
+        Room room = getMyActiveRoom(roomId);
+        Map<String, Long> voteCountByLabel = voteUserRepository.findByRoom(room).stream()
+                .collect(Collectors.groupingBy(
+                        voteUser -> voteUser.getVoteType().getLabel(),
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
+
+        return voteTypeRepository.findAll().stream()
+                .map(voteType -> new VoteStatusResDto(
+                        voteType.getLabel(),
+                        voteCountByLabel.getOrDefault(voteType.getLabel(), 0L).intValue()
+                ))
+                .toList();
     }
 
     public List<VoteStatusWithAliasResDto> getVoteStatusWithMembers(Long roomId) {
