@@ -8,11 +8,14 @@ import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
 import com.example.umc.domain.room.entity.Room;
 import com.example.umc.domain.room.repository.RoomRepository;
+import com.example.umc.global.common.exception.RestApiException;
+import com.example.umc.global.common.exception.code.status.GlobalErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +28,7 @@ public class RoomService {
     public RoomResDto createRoom(RoomReqDto request) {
         Room room = toRoom(request);
         Room savedRoom = roomRepository.save(room);
-        return toCreateRoomResDto(savedRoom);
+        return toRoomResDto(savedRoom);
     }
 
     public List<RoomResDto> getRooms() {
@@ -35,8 +38,16 @@ public class RoomService {
                 .toList();
     }
 
+    @Transactional
     public RoomResDto updateRoom(Long roomId, RoomReqDto request) {
-        return new RoomResDto(request.roomName(), roomId);
+        Room room = getMyActiveRoom(roomId);
+        int updatedCount = roomRepository.updateRoomName(request.roomName(), room.getRoomId());
+
+        if (updatedCount == 0) {
+            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+        }
+
+        return toRoomResDto(getMyActiveRoom(roomId));
     }
 
     public void deleteRoom(Long roomId) {
@@ -73,7 +84,12 @@ public class RoomService {
                 .build();
     }
 
-    private RoomResDto toCreateRoomResDto(Room room) {
-        return new RoomResDto(room.getRoomName(), room.getRoomId());
+
+    private Room getMyActiveRoom(Long roomId) {
+        if(!roomRepository.existsByRoomId(roomId)) {
+            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+        }
+
+        return roomRepository.findByRoomIdAndDeletedAtIsNull(roomId);
     }
 }

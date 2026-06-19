@@ -48,7 +48,8 @@ public class RoomController implements RoomControllerDocs {
             @RequestBody
             RoomReqDto request
     ) {
-        return BaseResponse.onSuccess(roomService.updateRoom(roomId, request));
+        RoomResDto result = roomService.updateRoom(roomId, request);
+        return BaseResponse.onSuccess(result);
     }
 
     @DeleteMapping("/{roomId}")
