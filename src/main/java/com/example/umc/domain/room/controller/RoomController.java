@@ -29,7 +29,10 @@ public class RoomController implements RoomControllerDocs {
     private final RoomService roomService;
 
     @PostMapping
-    public BaseResponse<RoomResDto> createRoom(@RequestBody RoomReqDto request) {
+    public BaseResponse<RoomResDto> createRoom(
+            @RequestBody
+            RoomReqDto request
+    ) {
         return BaseResponse.onSuccess(roomService.createRoom(request));
     }
 
@@ -40,36 +43,53 @@ public class RoomController implements RoomControllerDocs {
 
     @PatchMapping("/{roomId}")
     public BaseResponse<RoomResDto> updateRoom(
-            @PathVariable Long roomId,
-            @RequestBody RoomReqDto request
+            @PathVariable
+            Long roomId,
+            @RequestBody
+            RoomReqDto request
     ) {
         return BaseResponse.onSuccess(roomService.updateRoom(roomId, request));
     }
 
     @DeleteMapping("/{roomId}")
-    public BaseResponse<String> deleteRoom(@PathVariable Long roomId) {
+    public BaseResponse<String> deleteRoom(
+            @PathVariable
+            Long roomId
+    ) {
         roomService.deleteRoom(roomId);
         return BaseResponse.onSuccess("투표 방 삭제가 완료되었습니다.");
     }
 
     @PostMapping("/participants")
-    public BaseResponse<String> createParticipant(@RequestBody ParticipateRoomReqDto request) {
+    public BaseResponse<String> createParticipant(
+            @RequestBody
+            ParticipateRoomReqDto request
+    ) {
         roomService.participateRoom(request);
         return BaseResponse.onSuccess("투표 방 참여가 완료되었습니다.");
     }
 
     @PostMapping("/vote")
-    public BaseResponse<List<VoteStatusResDto>> createVote(@RequestBody VoteReqDto request) {
+    public BaseResponse<List<VoteStatusResDto>> createVote(
+            @RequestBody
+            VoteReqDto request
+    ) {
         return BaseResponse.onSuccess(roomService.vote(request));
     }
 
     @GetMapping("/vote")
-    public BaseResponse<List<VoteStatusResDto>> getVoteStatus(@RequestParam Long roomId) {
+    public BaseResponse<List<VoteStatusResDto>> getVoteStatus(
+            @RequestParam
+            Long roomId
+    ) {
         return BaseResponse.onSuccess(roomService.getVoteStatus(roomId));
     }
 
     @GetMapping("/vote-members")
-    public BaseResponse<List<VoteStatusWithAliasResDto>> getVoteStatusWithMember(@RequestParam Long roomId) {
+    public BaseResponse<List<VoteStatusWithAliasResDto>> getVoteStatusWithMember(
+            @RequestParam
+            Long roomId
+    ) {
         return BaseResponse.onSuccess(roomService.getVoteStatusWithMembers(roomId));
     }
 }
