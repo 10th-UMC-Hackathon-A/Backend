@@ -5,10 +5,16 @@ import com.example.umc.global.common.exception.code.BaseCodeDto;
 import com.example.umc.global.common.exception.code.status.GlobalErrorStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -23,6 +29,9 @@ import java.util.Optional;
 @Slf4j
 @RestControllerAdvice(annotations = {RestController.class})
 public class ExceptionAdvice extends ResponseEntityExceptionHandler {
+    private static final String PENALTY_USER_DRAW_ROOM_ROUND_CONSTRAINT = "uk_penalty_user_draw_room_round";
+    private static final String PENALTY_DRAW_ROOM_ROUND_CONSTRAINT = "uk_penalty_draw_room_round";
+
     /*
      * 직접 정의한 RestApiException 에러 클래스에 대한 예외 처리
      */
@@ -49,7 +58,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler
     public ResponseEntity<BaseResponse<String>> handleConstraintViolationException(ConstraintViolationException e) {
-        return handleExceptionInternal(GlobalErrorStatus._VALIDATION_ERROR.getCode());
+        return handleExceptionInternal(resolveDataIntegrityErrorCode(e));
     }
 
     /*
@@ -61,6 +70,11 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
             MethodArgumentTypeMismatchException e) {
         // 예외 처리 로직
         return handleExceptionInternal(GlobalErrorStatus._METHOD_ARGUMENT_ERROR.getCode());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<BaseResponse<String>> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        return handleExceptionInternal(resolveDataIntegrityErrorCode(e));
     }
 
     /*
@@ -87,6 +101,36 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
     }
 
+    @Override
+    public ResponseEntity<Object> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException e, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
+        return handleExceptionInternalObject(GlobalErrorStatus._REQUEST_FORMAT_ERROR.getCode(), null);
+    }
+
+    @Override
+    public ResponseEntity<Object> handleMissingServletRequestParameter(
+            MissingServletRequestParameterException e, HttpHeaders headers, HttpStatusCode statusCode,
+            WebRequest request) {
+        return handleExceptionInternalObject(GlobalErrorStatus._MISSING_PARAMETER.getCode(), null);
+    }
+
+    @Override
+    public ResponseEntity<Object> handleServletRequestBindingException(
+            ServletRequestBindingException e, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
+        if (e instanceof MissingRequestHeaderException) {
+            return handleExceptionInternalObject(GlobalErrorStatus._MISSING_HEADER.getCode(), null);
+        }
+
+        return handleExceptionInternalObject(GlobalErrorStatus._BAD_REQUEST.getCode(), null);
+    }
+
+    @Override
+    public ResponseEntity<Object> handleHttpRequestMethodNotSupported(
+            HttpRequestMethodNotSupportedException e, HttpHeaders headers, HttpStatusCode statusCode,
+            WebRequest request) {
+        return handleExceptionInternalObject(GlobalErrorStatus._METHOD_NOT_ALLOWED.getCode(), null);
+    }
+
     private ResponseEntity<BaseResponse<String>> handleExceptionHttpMessage(BaseCodeDto errorCode) {
         return ResponseEntity
                 .status(errorCode.getHttpStatus().value())
@@ -103,6 +147,47 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         return ResponseEntity
                 .status(errorCode.getHttpStatus().value())
                 .body(BaseResponse.onFailure(errorCode.getCode(), errorCode.getMessage(), errorArgs));
+    }
+
+    private ResponseEntity<Object> handleExceptionInternalObject(BaseCodeDto errorCode, Object errorArgs) {
+        return ResponseEntity
+                .status(errorCode.getHttpStatus().value())
+                .body(BaseResponse.onFailure(errorCode.getCode(), errorCode.getMessage(), errorArgs));
+    }
+
+    private BaseCodeDto resolveDataIntegrityErrorCode(Throwable e) {
+        if (hasConstraint(e, PENALTY_USER_DRAW_ROOM_ROUND_CONSTRAINT)) {
+            return GlobalErrorStatus._DRAW_USER_RESULT_ALREADY_CREATED.getCode();
+        }
+
+        if (hasConstraint(e, PENALTY_DRAW_ROOM_ROUND_CONSTRAINT)) {
+            return GlobalErrorStatus._DRAW_PENALTY_RESULT_ALREADY_CREATED.getCode();
+        }
+
+        return GlobalErrorStatus._DATA_INTEGRITY_ERROR.getCode();
+    }
+
+    private boolean hasConstraint(Throwable e, String expectedConstraintName) {
+        Throwable current = e;
+
+        while (current != null) {
+            if (current instanceof ConstraintViolationException constraintViolationException
+                    && matchesConstraintName(constraintViolationException.getConstraintName(), expectedConstraintName)) {
+                return true;
+            }
+
+            if (matchesConstraintName(current.getMessage(), expectedConstraintName)) {
+                return true;
+            }
+
+            current = current.getCause();
+        }
+
+        return false;
+    }
+
+    private boolean matchesConstraintName(String actual, String expected) {
+        return actual != null && actual.toLowerCase().contains(expected.toLowerCase());
     }
 
     private ResponseEntity<BaseResponse<String>> handleExceptionInternalFalse(BaseCodeDto errorCode,
