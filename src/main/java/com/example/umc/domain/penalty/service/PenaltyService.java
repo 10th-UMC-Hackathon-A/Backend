@@ -8,6 +8,7 @@ import com.example.umc.domain.penalty.dto.response.PenaltyUserDrawResultResDto;
 import com.example.umc.domain.penalty.entity.Penalty;
 import com.example.umc.domain.penalty.entity.PenaltyDrawResult;
 import com.example.umc.domain.penalty.entity.PenaltyUserDrawResult;
+import com.example.umc.domain.penalty.enums.GameTypeEnum;
 import com.example.umc.domain.penalty.repository.PenaltyDrawResultRepository;
 import com.example.umc.domain.penalty.repository.PenaltyRepository;
 import com.example.umc.domain.penalty.repository.PenaltyUserDrawResultRepository;
@@ -141,6 +142,7 @@ public class PenaltyService {
 
         // 2. 당첨 인덱스 선정
         int winnerIndex = secureRandom.nextInt(voteUsers.size());
+        GameTypeEnum penaltyType = getRandomPenaltyType();
 
         List<String> shuffledUserList = voteUsers.stream()
                 .map(v -> v.getUser().getNickname())
@@ -154,6 +156,7 @@ public class PenaltyService {
                         .room(room)
                         .drawRound(drawRound)
                         .user(selectedUser)
+                        .penaltyType(penaltyType)
                         .winnerIndex(winnerIndex)
                         .drawUserList(shuffledUserList)
                         .build()
@@ -174,6 +177,7 @@ public class PenaltyService {
 
         // 2. 당첨 인덱스 선정
         int prizeIndex = secureRandom.nextInt(penalties.size());
+        GameTypeEnum penaltyType = getRandomPenaltyType();
 
         List<String> shuffledPenaltyList = penalties.stream()
                 .map(Penalty::getPenaltyName)
@@ -183,6 +187,7 @@ public class PenaltyService {
         PenaltyDrawResult drawResult = penaltyDrawResultRepository.save(
                 PenaltyDrawResult.builder()
                         .penalty(penalties.get(prizeIndex))
+                        .penaltyType(penaltyType)
                         .room(room)
                         .drawRound(drawRound)
                         .prizeIndex(prizeIndex)
@@ -191,6 +196,11 @@ public class PenaltyService {
         );
 
         return toPenaltyDrawResultResDto(drawResult);
+    }
+
+    private GameTypeEnum getRandomPenaltyType() {
+        GameTypeEnum[] penaltyTypes = GameTypeEnum.values();
+        return penaltyTypes[secureRandom.nextInt(penaltyTypes.length)];
     }
 
     private PenaltyResDto toPenaltyResDto(Penalty penalty) {
@@ -206,6 +216,7 @@ public class PenaltyService {
                 drawResult.getRoom().getRoomId(),
                 drawResult.getDrawRound(),
                 user.getNickname(),
+                drawResult.getPenaltyType(),
                 drawResult.getWinnerIndex(),
                 drawResult.getDrawUserList()
         );
@@ -218,6 +229,7 @@ public class PenaltyService {
                 drawResult.getRoom().getRoomId(),
                 drawResult.getDrawRound(),
                 drawResult.getPenalty().getPenaltyName(),
+                drawResult.getPenaltyType(),
                 drawResult.getPrizeIndex(),
                 drawResult.getDrwaPenaltyList()
         );
