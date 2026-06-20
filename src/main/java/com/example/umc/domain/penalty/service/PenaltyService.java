@@ -1,5 +1,6 @@
 package com.example.umc.domain.penalty.service;
 
+import com.example.umc.domain.auth.service.AuthService;
 import com.example.umc.domain.penalty.dto.request.PenaltyReqDto;
 import com.example.umc.domain.penalty.dto.response.MissionCompleteResDto;
 import com.example.umc.domain.penalty.dto.response.PenaltyDrawResultResDto;
@@ -16,15 +17,11 @@ import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.entity.Room;
 import com.example.umc.domain.room.entity.User;
-import com.example.umc.domain.room.entity.VoteType;
 import com.example.umc.domain.room.entity.VoteUser;
 import com.example.umc.domain.room.repository.RoomRepository;
-import com.example.umc.domain.room.repository.UserRepository;
 import com.example.umc.domain.room.repository.VoteUserRepository;
 import com.example.umc.global.common.exception.RestApiException;
-import com.example.umc.global.common.exception.code.status.AuthErrorStatus;
 import com.example.umc.global.common.exception.code.status.GlobalErrorStatus;
-import com.example.umc.global.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,8 +41,7 @@ public class PenaltyService {
     private final RoomRepository roomRepository;
     private final VoteUserRepository voteUserRepository;
     private final SecureRandom secureRandom = new SecureRandom();
-    private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
+    private final AuthService authService;
 
     @Transactional
     public PenaltyResDto createPenalty(PenaltyReqDto request) {
@@ -101,7 +97,7 @@ public class PenaltyService {
 
     @Transactional
     public MissionCompleteResDto missionComplete(String authorizationHeader, Long roomId) {
-        User user = getUserFromAuthorizationHeader(authorizationHeader);
+        User user = authService.getUserFromAuthorizationHeader(authorizationHeader);
 
         Room room = getRoom(roomId);
         PenaltyUserDrawResult drawResult = penaltyUserDrawResultRepository.findByRoomAndDrawRound(room, room.getDrawRound())
@@ -240,21 +236,4 @@ public class PenaltyService {
         );
     }
 
-    private User getUserFromAuthorizationHeader(String authorizationHeader) {
-        String token = extractToken(authorizationHeader);
-        if (!jwtUtil.isValid(token)) {
-            throw new RestApiException(AuthErrorStatus.INVALID_ACCESS_TOKEN);
-        }
-
-        return userRepository.findByUid(jwtUtil.getUid(token))
-                .orElseThrow(() -> new RestApiException(AuthErrorStatus.USER_NOT_FOUND));
-    }
-
-    private String extractToken(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new RestApiException(AuthErrorStatus.EMPTY_JWT);
-        }
-
-        return authorizationHeader.substring(7);
-    }
 }

@@ -94,6 +94,16 @@ public class RoomController implements RoomControllerDocs {
         return BaseResponse.onSuccess(roomService.participateRoom(request));
     }
 
+    @GetMapping("/{roomId}/participants")
+    public BaseResponse<ParticipantNickNameResDto> createParticipant(
+            @RequestHeader("Authorization")
+            String authorizationHeader,
+            @PathVariable
+            Long roomId
+    ) {
+        return BaseResponse.onSuccess(roomService.getParticipantNickName(authorizationHeader, roomId));
+    }
+
     @PostMapping("/vote")
     public BaseResponse<List<VoteStatusResDto>> createVote(
             @RequestHeader("Authorization")
