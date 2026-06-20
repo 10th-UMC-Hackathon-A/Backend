@@ -1,6 +1,5 @@
 package com.example.umc.global.config;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -44,10 +43,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
+        config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
-                "https://umc-hackathon-frontend.vercel.app/"
+                "https://umc-hackathon-frontend.vercel.app"
         )); // 허용하는 Origins
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); // 해당 Origins에서 처리가능한 Method
         config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // 허용된 Origin의 브라우저가 CORS 요청 시 보낼 수 있도록 허용할 요청 헤더
