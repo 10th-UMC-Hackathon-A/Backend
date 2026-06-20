@@ -2,11 +2,13 @@ package com.example.umc.domain.room.controller;
 
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
+import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.response.ParticipantResDto;
 import com.example.umc.domain.room.dto.response.RoomResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
+import com.example.umc.domain.room.dto.response.VoteTypeResDto;
 import com.example.umc.domain.room.service.RoomService;
 import com.example.umc.global.common.base.BaseResponse;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,19 @@ public class RoomController implements RoomControllerDocs {
     @GetMapping
     public BaseResponse<List<RoomResDto>> getRoomList() {
         return BaseResponse.onSuccess(roomService.getRooms());
+    }
+
+    @PostMapping("/vote-types")
+    public BaseResponse<VoteTypeResDto> createVoteType(
+            @RequestBody
+            VoteTypeReqDto request
+    ) {
+        return BaseResponse.onSuccess(roomService.createVoteType(request));
+    }
+
+    @GetMapping("/vote-types")
+    public BaseResponse<List<VoteTypeResDto>> getVoteTypeList() {
+        return BaseResponse.onSuccess(roomService.getVoteTypes());
     }
 
     @PatchMapping("/{roomId}")

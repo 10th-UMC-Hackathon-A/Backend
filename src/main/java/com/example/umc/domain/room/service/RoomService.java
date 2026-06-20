@@ -2,11 +2,13 @@ package com.example.umc.domain.room.service;
 
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
+import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.response.ParticipantResDto;
 import com.example.umc.domain.room.dto.response.RoomResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
+import com.example.umc.domain.room.dto.response.VoteTypeResDto;
 import com.example.umc.domain.room.entity.Room;
 import com.example.umc.domain.room.repository.RoomRepository;
 import com.example.umc.global.common.exception.RestApiException;
@@ -58,6 +60,21 @@ public class RoomService {
         List<Room> rooms = roomRepository.findAll();
         return rooms.stream()
                 .map(this::toRoomResDto)
+                .toList();
+    }
+
+    @Transactional
+    public VoteTypeResDto createVoteType(VoteTypeReqDto request) {
+        VoteType voteType = VoteType.builder()
+                .label(request.label())
+                .build();
+        VoteType savedVoteType = voteTypeRepository.save(voteType);
+        return toVoteTypeResDto(savedVoteType);
+    }
+
+    public List<VoteTypeResDto> getVoteTypes() {
+        return voteTypeRepository.findAll().stream()
+                .map(this::toVoteTypeResDto)
                 .toList();
     }
 
@@ -189,6 +206,10 @@ public class RoomService {
 
     private RoomResDto toRoomResDto(Room room) {
         return new RoomResDto(room.getRoomName(), room.getRoomId());
+    }
+
+    private VoteTypeResDto toVoteTypeResDto(VoteType voteType) {
+        return new VoteTypeResDto(voteType.getVoteTypeId(), voteType.getLabel());
     }
 
     private void startVoteIfNeeded(Room room, LocalDateTime now) {
