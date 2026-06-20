@@ -10,4 +10,6 @@ public interface RoomUserRepository extends JpaRepository<RoomUser, Long> {
     boolean existsByRoomAndUser(Room room, User user);
 
     boolean existsByRoomAndUser_NicknameAndUser_UidNot(Room room, String nickname, String uid);
+
+    int countByRoom(Room room);
 }
