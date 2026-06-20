@@ -1,7 +1,9 @@
 package com.example.umc.domain.penalty.controller;
 
 import com.example.umc.domain.penalty.dto.request.PenaltyReqDto;
+import com.example.umc.domain.penalty.dto.response.PenaltyDrawResultResDto;
 import com.example.umc.domain.penalty.dto.response.PenaltyResDto;
+import com.example.umc.domain.penalty.dto.response.PenaltyUserDrawResultResDto;
 import com.example.umc.global.common.base.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,6 +32,24 @@ public interface PenaltyControllerDocs {
             @ApiResponse(responseCode = "200", description = "벌칙 목록 조회 성공")
     })
     BaseResponse<List<PenaltyResDto>> getPenaltyList();
+
+    @Operation(summary = "벌칙자 추첨", description = "투표 결과를 바탕으로 벌칙자를 추첨합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "벌칙자 추첨 성공")
+    })
+    BaseResponse<PenaltyUserDrawResultResDto> drawPenaltyUser(
+            @Parameter(name = "roomId", description = "추첨을 진행할 투표 방 ID", in = ParameterIn.QUERY, required = true)
+            Long roomId
+    );
+
+    @Operation(summary = "벌칙 추첨", description = "등록된 벌칙 중 하나를 추첨합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "벌칙 추첨 성공")
+    })
+    BaseResponse<PenaltyDrawResultResDto> drawPenalty(
+            @Parameter(name = "roomId", description = "추첨을 진행할 투표 방 ID", in = ParameterIn.QUERY, required = true)
+            Long roomId
+    );
 
     @Operation(summary = "벌칙 수정", description = "벌칙 ID와 수정할 라벨을 받아 벌칙 정보를 수정합니다.")
     @ApiResponses({
