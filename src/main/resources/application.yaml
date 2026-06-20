@@ -22,4 +22,4 @@ jwt:
     expiration:
       access: 1800000 # 30분
 vote:
-  deadline-seconds: ${VOTE_DEADLINE_SECONDS:30}
+  deadline-seconds: ${VOTE_DEADLINE_SECONDS:90}

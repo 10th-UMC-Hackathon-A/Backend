@@ -11,5 +11,9 @@ public interface VoteUserRepository extends JpaRepository<VoteUser, Long> {
 
     List<VoteUser> findByRoom(Room room);
 
+    boolean existsByRoomAndUser(Room room, User user);
+
     void deleteByRoomAndUser(Room room, User user);
+
+    void deleteByRoom(Room room);
 }
