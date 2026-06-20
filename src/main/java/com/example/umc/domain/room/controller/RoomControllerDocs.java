@@ -75,7 +75,7 @@ public interface RoomControllerDocs {
             @ApiResponse(responseCode = "200", description = "투표 생성 성공")
     })
     BaseResponse<List<VoteStatusResDto>> createVote(
-            @Parameter(hidden = true)
+            @Parameter(hidden = false)
             String authorizationHeader,
             @RequestBody(description = "투표 생성 요청 정보", required = true)
             VoteReqDto request

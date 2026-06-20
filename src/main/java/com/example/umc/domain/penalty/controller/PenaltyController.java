@@ -1,7 +1,9 @@
 package com.example.umc.domain.penalty.controller;
 
 import com.example.umc.domain.penalty.dto.request.PenaltyReqDto;
+import com.example.umc.domain.penalty.dto.response.PenaltyDrawResultResDto;
 import com.example.umc.domain.penalty.dto.response.PenaltyResDto;
+import com.example.umc.domain.penalty.dto.response.PenaltyUserDrawResultResDto;
 import com.example.umc.domain.penalty.service.PenaltyService;
 import com.example.umc.global.common.base.BaseResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,22 @@ public class PenaltyController implements PenaltyControllerDocs {
     @GetMapping
     public BaseResponse<List<PenaltyResDto>> getPenaltyList() {
         return BaseResponse.onSuccess(penaltyService.getPenalties());
+    }
+
+    @PostMapping("/draw-user")
+    public BaseResponse<PenaltyUserDrawResultResDto> drawPenaltyUser(
+            @RequestParam
+            Long roomId
+    ) {
+        return BaseResponse.onSuccess(penaltyService.drawPenaltyUser(roomId));
+    }
+
+    @PostMapping("/draw")
+    public BaseResponse<PenaltyDrawResultResDto> drawPenalty(
+            @RequestParam
+            Long roomId
+    ) {
+        return BaseResponse.onSuccess(penaltyService.drawPenalty(roomId));
     }
 
     @PatchMapping("/update")
