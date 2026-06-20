@@ -2,6 +2,7 @@ package com.example.umc.domain.room.controller;
 
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
+import com.example.umc.domain.room.dto.request.TokenRefreshReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
 import com.example.umc.domain.room.dto.response.*;
@@ -87,6 +88,21 @@ public interface RoomControllerDocs {
     BaseResponse<ParticipantResDto> createParticipant(
             @RequestBody(description = "투표 방 참여 요청 정보", required = true)
             ParticipateRoomReqDto request
+    );
+
+    @Operation(
+            summary = "투표 방 참여자 닉네임 조회",
+            description = "Authorization 헤더의 Bearer accessToken과 투표 방 ID를 통해 해당 방에서 사용하는 닉네임을 조회합니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "투표 방 참여자 닉네임 조회 성공")
+    })
+    BaseResponse<ParticipantNickNameResDto> createParticipant(
+            @RequestHeader("Authorization")
+            String authorizationHeader,
+            @Parameter(name = "roomId", description = "조회할 투표 방 ID", in = ParameterIn.PATH, required = true)
+            Long roomId
     );
 
     @Operation(

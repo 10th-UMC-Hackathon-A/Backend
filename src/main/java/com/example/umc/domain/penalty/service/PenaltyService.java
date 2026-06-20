@@ -1,5 +1,6 @@
 package com.example.umc.domain.penalty.service;
 
+import com.example.umc.domain.auth.service.AuthService;
 import com.example.umc.domain.penalty.dto.request.PenaltyReqDto;
 import com.example.umc.domain.penalty.dto.response.MissionCompleteResDto;
 import com.example.umc.domain.penalty.dto.response.PenaltyDrawResultResDto;
@@ -8,6 +9,7 @@ import com.example.umc.domain.penalty.dto.response.PenaltyUserDrawResultResDto;
 import com.example.umc.domain.penalty.entity.Penalty;
 import com.example.umc.domain.penalty.entity.PenaltyDrawResult;
 import com.example.umc.domain.penalty.entity.PenaltyUserDrawResult;
+import com.example.umc.domain.penalty.enums.GameTypeEnum;
 import com.example.umc.domain.penalty.repository.PenaltyDrawResultRepository;
 import com.example.umc.domain.penalty.repository.PenaltyRepository;
 import com.example.umc.domain.penalty.repository.PenaltyUserDrawResultRepository;
@@ -15,15 +17,11 @@ import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.entity.Room;
 import com.example.umc.domain.room.entity.User;
-import com.example.umc.domain.room.entity.VoteType;
 import com.example.umc.domain.room.entity.VoteUser;
 import com.example.umc.domain.room.repository.RoomRepository;
-import com.example.umc.domain.room.repository.UserRepository;
 import com.example.umc.domain.room.repository.VoteUserRepository;
 import com.example.umc.global.common.exception.RestApiException;
-import com.example.umc.global.common.exception.code.status.AuthErrorStatus;
 import com.example.umc.global.common.exception.code.status.GlobalErrorStatus;
-import com.example.umc.global.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,8 +41,7 @@ public class PenaltyService {
     private final RoomRepository roomRepository;
     private final VoteUserRepository voteUserRepository;
     private final SecureRandom secureRandom = new SecureRandom();
-    private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
+    private final AuthService authService;
 
     @Transactional
     public PenaltyResDto createPenalty(PenaltyReqDto request) {
@@ -86,7 +83,7 @@ public class PenaltyService {
         int updatedCount = penaltyRepository.updatePenaltyName(penaltyId, request.label());
 
         if (updatedCount == 0) {
-            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+            throw new RestApiException(GlobalErrorStatus._PENALTY_NOT_FOUND);
         }
 
         return toPenaltyResDto(getPenalty(penaltyId));
@@ -100,16 +97,13 @@ public class PenaltyService {
 
     @Transactional
     public MissionCompleteResDto missionComplete(String authorizationHeader, Long roomId) {
-        User user = getUserFromAuthorizationHeader(authorizationHeader);
+        User user = authService.getUserFromAuthorizationHeader(authorizationHeader);
 
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        Room room = getRoom(roomId);
         PenaltyUserDrawResult drawResult = penaltyUserDrawResultRepository.findByRoomAndDrawRound(room, room.getDrawRound())
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._DRAW_RESULT_NOT_FOUND));
 
-        String drawUserName = drawResult.getDrawUserList().get(drawResult.getWinnerIndex());
-
-        if(!drawUserName.equals(user.getNickname())) {
+        if(!drawResult.getUser().getUserId().equals(user.getUserId())) {
            throw new RestApiException(GlobalErrorStatus._WRONG_DRAW_USER);
         }
 
@@ -121,19 +115,27 @@ public class PenaltyService {
 
     private Penalty getPenalty(Long penaltyId) {
         return penaltyRepository.findByPenaltyIdAndDeletedAtIsNull(penaltyId)
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._PENALTY_NOT_FOUND));
     }
 
     private Room getRoom(Long roomId) {
-        return roomRepository.findById(roomId)
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        if (!roomRepository.existsByRoomId(roomId)) {
+            throw new RestApiException(GlobalErrorStatus._ROOM_NOT_FOUND);
+        }
+
+        Room room = roomRepository.findByRoomIdAndDeletedAtIsNull(roomId);
+        if (room == null) {
+            throw new RestApiException(GlobalErrorStatus._ROOM_DELETED);
+        }
+
+        return room;
     }
 
     private PenaltyUserDrawResultResDto createPenaltyUserDrawResult(Room room, Integer drawRound) {
         List<VoteUser> voteUsers = voteUserRepository.findByRoom(room);
 
         if (voteUsers.isEmpty()) {
-            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+            throw new RestApiException(GlobalErrorStatus._DRAW_CANDIDATE_NOT_FOUND);
         }
 
         // 1. 랜덤 셔플
@@ -141,6 +143,7 @@ public class PenaltyService {
 
         // 2. 당첨 인덱스 선정
         int winnerIndex = secureRandom.nextInt(voteUsers.size());
+        GameTypeEnum penaltyType = getRandomPenaltyType();
 
         List<String> shuffledUserList = voteUsers.stream()
                 .map(v -> v.getUser().getNickname())
@@ -154,6 +157,7 @@ public class PenaltyService {
                         .room(room)
                         .drawRound(drawRound)
                         .user(selectedUser)
+                        .penaltyType(penaltyType)
                         .winnerIndex(winnerIndex)
                         .drawUserList(shuffledUserList)
                         .build()
@@ -166,7 +170,7 @@ public class PenaltyService {
         List<Penalty> penalties = penaltyRepository.findAllByDeletedAtIsNull();
 
         if (penalties.isEmpty()) {
-            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+            throw new RestApiException(GlobalErrorStatus._PENALTY_POOL_EMPTY);
         }
 
         // 1. 랜덤 셔플
@@ -174,6 +178,7 @@ public class PenaltyService {
 
         // 2. 당첨 인덱스 선정
         int prizeIndex = secureRandom.nextInt(penalties.size());
+        GameTypeEnum penaltyType = getRandomPenaltyType();
 
         List<String> shuffledPenaltyList = penalties.stream()
                 .map(Penalty::getPenaltyName)
@@ -183,6 +188,7 @@ public class PenaltyService {
         PenaltyDrawResult drawResult = penaltyDrawResultRepository.save(
                 PenaltyDrawResult.builder()
                         .penalty(penalties.get(prizeIndex))
+                        .penaltyType(penaltyType)
                         .room(room)
                         .drawRound(drawRound)
                         .prizeIndex(prizeIndex)
@@ -191,6 +197,11 @@ public class PenaltyService {
         );
 
         return toPenaltyDrawResultResDto(drawResult);
+    }
+
+    private GameTypeEnum getRandomPenaltyType() {
+        GameTypeEnum[] penaltyTypes = GameTypeEnum.values();
+        return penaltyTypes[secureRandom.nextInt(penaltyTypes.length)];
     }
 
     private PenaltyResDto toPenaltyResDto(Penalty penalty) {
@@ -206,6 +217,7 @@ public class PenaltyService {
                 drawResult.getRoom().getRoomId(),
                 drawResult.getDrawRound(),
                 user.getNickname(),
+                drawResult.getPenaltyType(),
                 drawResult.getWinnerIndex(),
                 drawResult.getDrawUserList()
         );
@@ -218,26 +230,10 @@ public class PenaltyService {
                 drawResult.getRoom().getRoomId(),
                 drawResult.getDrawRound(),
                 drawResult.getPenalty().getPenaltyName(),
+                drawResult.getPenaltyType(),
                 drawResult.getPrizeIndex(),
                 drawResult.getDrwaPenaltyList()
         );
     }
 
-    private User getUserFromAuthorizationHeader(String authorizationHeader) {
-        String token = extractToken(authorizationHeader);
-        if (!jwtUtil.isValid(token)) {
-            throw new RestApiException(AuthErrorStatus.INVALID_ACCESS_TOKEN);
-        }
-
-        return userRepository.findByUid(jwtUtil.getUid(token))
-                .orElseThrow(() -> new RestApiException(AuthErrorStatus.USER_NOT_FOUND));
-    }
-
-    private String extractToken(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new RestApiException(AuthErrorStatus.EMPTY_JWT);
-        }
-
-        return authorizationHeader.substring(7);
-    }
 }

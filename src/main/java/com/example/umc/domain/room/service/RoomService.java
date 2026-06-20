@@ -1,6 +1,6 @@
 package com.example.umc.domain.room.service;
 
-import com.example.umc.domain.penalty.repository.PenaltyUserDrawResultRepository;
+import com.example.umc.domain.auth.service.AuthService;
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
@@ -20,7 +20,6 @@ import com.example.umc.domain.room.repository.UserRepository;
 import com.example.umc.domain.room.repository.VoteTypeRepository;
 import com.example.umc.domain.room.repository.VoteUserRepository;
 import com.example.umc.global.common.exception.code.status.AuthErrorStatus;
-import com.example.umc.global.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +43,7 @@ public class RoomService {
     private final RoomUserRepository roomUserRepository;
     private final VoteTypeRepository voteTypeRepository;
     private final VoteUserRepository voteUserRepository;
-    private final JwtUtil jwtUtil;
+    private final AuthService authService;
 
     @Value("${vote.deadline-seconds:30}")
     private long voteDeadlineSeconds;
@@ -66,7 +65,8 @@ public class RoomService {
     public RoomDetailsResDto getRoomDetails(Long roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
-        return toRoomDetailResDto(room);
+        Integer participantedUserCount = roomUserRepository.countByRoom(room);
+        return toRoomDetailResDto(room, participantedUserCount);
     }
 
     @Transactional
@@ -84,6 +84,7 @@ public class RoomService {
                 .toList();
     }
 
+    @Transactional
     public RoomResDto updateRoom(Long roomId, RoomReqDto request) {
         Room room = getMyActiveRoom(roomId);
         int updatedCount = roomRepository.updateRoomName(request.roomName(), room.getRoomId());
@@ -136,7 +137,8 @@ public class RoomService {
                 room.getRoomId(),
                 user.getNickname(),
                 user.getUid(),
-                jwtUtil.createAccessToken(request)
+                authService.createAccessToken(request),
+                authService.createRefreshToken(request)
         );
     }
 
@@ -148,14 +150,14 @@ public class RoomService {
 
     @Transactional
     public List<VoteStatusResDto> vote(String authorizationHeader, VoteReqDto request) {
-        User user = getUserFromAuthorizationHeader(authorizationHeader);
+        User user = authService.getUserFromAuthorizationHeader(authorizationHeader);
         Room room = getMyActiveRoom(request.roomId());
 
         startVoteIfNeeded(room, LocalDateTime.now());
         room = getMyActiveRoom(request.roomId());
         validateVoteOpen(room, LocalDateTime.now());
         VoteType voteType = voteTypeRepository.findByLabel(request.position())
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._VOTE_TYPE_NOT_FOUND));
 
         if (!roomUserRepository.existsByRoomAndUser(room, user)) {
             throw new RestApiException(AuthErrorStatus.INVALID_ROLE);
@@ -192,6 +194,17 @@ public class RoomService {
                 .toList();
     }
 
+    public ParticipantNickNameResDto getParticipantNickName(String authorizationHeader, Long roomId) {
+        User user = authService.getUserFromAuthorizationHeader(authorizationHeader);
+        Room room = getMyActiveRoom(roomId);
+
+        if (!roomUserRepository.existsByRoomAndUser(room, user)) {
+            throw new RestApiException(AuthErrorStatus.INVALID_ID_TOKEN);
+        }
+
+        return new ParticipantNickNameResDto(user.getNickname());
+    }
+
     @Transactional(readOnly = true)
     public List<VoteStatusWithAliasResDto> getVoteStatusWithMembers(Long roomId) {
         Room room = getMyActiveRoom(roomId);
@@ -213,30 +226,19 @@ public class RoomService {
                 .toList();
     }
 
-    private User getUserFromAuthorizationHeader(String authorizationHeader) {
-        String token = extractToken(authorizationHeader);
-        if (!jwtUtil.isValid(token)) {
-            throw new RestApiException(AuthErrorStatus.INVALID_ACCESS_TOKEN);
-        }
-
-        return userRepository.findByUid(jwtUtil.getUid(token))
-                .orElseThrow(() -> new RestApiException(AuthErrorStatus.USER_NOT_FOUND));
-    }
-
-    private String extractToken(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new RestApiException(AuthErrorStatus.EMPTY_JWT);
-        }
-
-        return authorizationHeader.substring(7);
-    }
-
     private RoomResDto toRoomResDto(Room room) {
         return new RoomResDto(room.getRoomName(), room.getRoomId());
     }
 
-    private RoomDetailsResDto toRoomDetailResDto(Room room) {
-        return new RoomDetailsResDto(room.getRoomId(), room.getRoomName(), room.getVoteStartedAt(), room.getVoteClosedAt(), room.getDrawRound());
+    private RoomDetailsResDto toRoomDetailResDto(Room room, Integer roomUserCount) {
+        return new RoomDetailsResDto(
+                room.getRoomId(),
+                room.getRoomName(),
+                room.getVoteStartedAt(),
+                room.getVoteClosedAt(),
+                room.getDrawRound(),
+                roomUserCount
+        );
     }
 
     private VoteTypeResDto toVoteTypeResDto(VoteType voteType) {
@@ -262,7 +264,7 @@ public class RoomService {
                 voteUserRepository.deleteByRoom(room);
                 roomRepository.completeMission(room.getRoomId());
 
-                return;
+                throw new RestApiException(GlobalErrorStatus._ROUND_TRANSITIONED);
             }
 
             throw new RestApiException(GlobalErrorStatus._VOTE_CLOSED);

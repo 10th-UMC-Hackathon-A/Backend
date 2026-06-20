@@ -7,6 +7,7 @@ import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.response.*;
 import com.example.umc.domain.room.service.RoomService;
 import com.example.umc.global.common.base.BaseResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,7 @@ public class RoomController implements RoomControllerDocs {
 
     @PostMapping
     public BaseResponse<RoomResDto> createRoom(
+            @Valid
             @RequestBody
             RoomReqDto request
     ) {
@@ -51,6 +53,7 @@ public class RoomController implements RoomControllerDocs {
 
     @PostMapping("/vote-types")
     public BaseResponse<VoteTypeResDto> createVoteType(
+            @Valid
             @RequestBody
             VoteTypeReqDto request
     ) {
@@ -66,6 +69,7 @@ public class RoomController implements RoomControllerDocs {
     public BaseResponse<RoomResDto> updateRoom(
             @PathVariable
             Long roomId,
+            @Valid
             @RequestBody
             RoomReqDto request
     ) {
@@ -90,10 +94,21 @@ public class RoomController implements RoomControllerDocs {
         return BaseResponse.onSuccess(roomService.participateRoom(request));
     }
 
+    @GetMapping("/{roomId}/participants")
+    public BaseResponse<ParticipantNickNameResDto> createParticipant(
+            @RequestHeader("Authorization")
+            String authorizationHeader,
+            @PathVariable
+            Long roomId
+    ) {
+        return BaseResponse.onSuccess(roomService.getParticipantNickName(authorizationHeader, roomId));
+    }
+
     @PostMapping("/vote")
     public BaseResponse<List<VoteStatusResDto>> createVote(
             @RequestHeader("Authorization")
             String authorizationHeader,
+            @Valid
             @RequestBody
             VoteReqDto request
     ) throws Exception {
