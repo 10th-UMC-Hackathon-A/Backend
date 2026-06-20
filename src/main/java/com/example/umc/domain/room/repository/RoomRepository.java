@@ -37,6 +37,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("""
         UPDATE Room r
         SET r.draw_round = r.draw_round + 1,
+            r.voteStartedAt = null,
             r.voteClosedAt = null
         WHERE r.roomId = :roomId
             and r.deletedAt is null
