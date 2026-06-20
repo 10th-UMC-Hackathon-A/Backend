@@ -19,6 +19,9 @@ public enum GlobalErrorStatus implements BaseCodeInterface {
     _METHOD_ARGUMENT_ERROR(HttpStatus.BAD_REQUEST, "COMMON405", "Argument Type이 올바르지 않습니다."),
     _REQUEST_FORMAT_ERROR(HttpStatus.BAD_REQUEST, "COMMON406", "요청 본문 형식이 올바르지 않습니다. Enum 값이나 다른 데이터 형식을 확인해주세요."),
     _VOTE_CLOSED(HttpStatus.GONE, "ROOM410", "투표가 마감되었습니다. 페널티 조회로 이동하시오."),
+    _ALREADY_VOTED(HttpStatus.CONFLICT, "VOTE409", "이미 투표한 사용자입니다."),
+    _DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "ROOM409", "이미 사용 중인 닉네임입니다."),
+    _INVALID_NICKNAME_FORMAT(HttpStatus.BAD_REQUEST, "ROOM400", "허용되지 않는 닉네임 형식입니다."),
     _WRONG_DRAW_USER(HttpStatus.BAD_REQUEST, "DRAW400", "벌칙 대상자가 아닙니다."),
     _INTERNAL_PAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "페이지 에러, 0 이상의 페이지를 입력해주세요");
 
