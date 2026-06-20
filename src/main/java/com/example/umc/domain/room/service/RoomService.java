@@ -130,6 +130,8 @@ public class RoomService {
     public List<VoteStatusResDto> vote(String authorizationHeader, VoteReqDto request) {
         User user = getUserFromAuthorizationHeader(authorizationHeader);
         Room room = getMyActiveRoom(request.roomId());
+
+        validateVoteOpen(room, LocalDateTime.now());
         VoteType voteType = voteTypeRepository.findByLabel(request.position())
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
 
