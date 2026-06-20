@@ -25,7 +25,10 @@ public class PenaltyController implements PenaltyControllerDocs {
     private final PenaltyService penaltyService;
 
     @PostMapping
-    public BaseResponse<PenaltyResDto> createPenalty(@RequestBody PenaltyReqDto request) {
+    public BaseResponse<PenaltyResDto> createPenalty(
+            @RequestBody
+            PenaltyReqDto request
+    ) {
         return BaseResponse.onSuccess(penaltyService.createPenalty(request));
     }
 
@@ -36,14 +39,19 @@ public class PenaltyController implements PenaltyControllerDocs {
 
     @PatchMapping("/update")
     public BaseResponse<PenaltyResDto> updatePenalty(
-            @RequestParam Long penaltyId,
-            @RequestBody PenaltyReqDto request
+            @RequestParam
+            Long penaltyId,
+            @RequestBody
+            PenaltyReqDto request
     ) {
         return BaseResponse.onSuccess(penaltyService.updatePenalty(penaltyId, request));
     }
 
     @DeleteMapping("/{penaltyId}")
-    public BaseResponse<String> deletePenalty(@PathVariable Long penaltyId) {
+    public BaseResponse<String> deletePenalty(
+            @PathVariable
+            Long penaltyId
+    ) {
         penaltyService.deletePenalty(penaltyId);
         return BaseResponse.onSuccess("벌칙 삭제가 완료되었습니다.");
     }

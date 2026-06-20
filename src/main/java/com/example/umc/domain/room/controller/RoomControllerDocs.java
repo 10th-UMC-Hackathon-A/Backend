@@ -3,6 +3,7 @@ package com.example.umc.domain.room.controller;
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
+import com.example.umc.domain.room.dto.response.ParticipantResDto;
 import com.example.umc.domain.room.dto.response.RoomResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
@@ -55,23 +57,29 @@ public interface RoomControllerDocs {
             Long roomId
     );
 
-    @Operation(summary = "투표 방 참여", description = "닉네임과 투표 방 ID를 받아 투표 방에 참여합니다.")
+    @Operation(summary = "투표 방 참여", description = "닉네임과 투표 방 ID를 받아 투표 방에 참여하고, 응답 body로 accessToken을 반환합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "투표 방 참여 성공")
     })
-    BaseResponse<String> createParticipant(
+    BaseResponse<ParticipantResDto> createParticipant(
             @RequestBody(description = "투표 방 참여 요청 정보", required = true)
             ParticipateRoomReqDto request
     );
 
-    @Operation(summary = "투표 생성", description = "투표 방 ID와 투표 위치 정보를 받아 투표를 생성하고 현재 투표 현황을 반환합니다.")
+    @Operation(
+            summary = "투표 생성",
+            description = "Authorization 헤더의 Bearer accessToken을 검증한 뒤, 투표 방 ID와 투표 위치 정보를 받아 투표를 생성하고 현재 투표 현황을 반환합니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "투표 생성 성공")
     })
     BaseResponse<List<VoteStatusResDto>> createVote(
+            @Parameter(hidden = true)
+            String authorizationHeader,
             @RequestBody(description = "투표 생성 요청 정보", required = true)
             VoteReqDto request
-    );
+    ) throws Exception;
 
     @Operation(summary = "투표 현황 조회", description = "투표 방 ID에 해당하는 투표 항목별 집계 현황을 조회합니다.")
     @ApiResponses({
