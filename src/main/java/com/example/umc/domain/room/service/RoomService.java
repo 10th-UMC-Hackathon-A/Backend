@@ -102,6 +102,8 @@ public class RoomService {
         LocalDateTime now = LocalDateTime.now();
 
         startVoteIfNeeded(room, now);
+        room = roomRepository.findById(request.roomId())
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
         validateVoteOpen(room, now);
 
         User user = userRepository.findByUid(request.uid())
