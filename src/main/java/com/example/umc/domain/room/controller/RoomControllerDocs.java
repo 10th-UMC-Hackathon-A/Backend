@@ -4,11 +4,7 @@ import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
-import com.example.umc.domain.room.dto.response.ParticipantResDto;
-import com.example.umc.domain.room.dto.response.RoomResDto;
-import com.example.umc.domain.room.dto.response.VoteStatusResDto;
-import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
-import com.example.umc.domain.room.dto.response.VoteTypeResDto;
+import com.example.umc.domain.room.dto.response.*;
 import com.example.umc.global.common.base.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,6 +35,15 @@ public interface RoomControllerDocs {
             @ApiResponse(responseCode = "200", description = "투표 방 목록 조회 성공")
     })
     BaseResponse<List<RoomResDto>> getRoomList();
+
+    @Operation(summary = "투표 방 상세 조회", description = "현재 등록된 투표 방의 상세 데이터를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "투표 방 목록 조회 성공")
+    })
+    BaseResponse<RoomDetailsResDto> getRoomDetails(
+            @Parameter(name = "roomId", description = "조회할 투표 방 ID", in = ParameterIn.QUERY, required = true)
+            Long roomId
+    );
 
     @Operation(summary = "투표 형식 생성", description = "투표 형식 라벨을 받아 새로운 투표 형식을 생성합니다.")
     @ApiResponses({

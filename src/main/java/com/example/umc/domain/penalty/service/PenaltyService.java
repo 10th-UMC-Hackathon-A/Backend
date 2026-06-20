@@ -67,18 +67,18 @@ public class PenaltyService {
     public PenaltyUserDrawResultResDto drawPenaltyUser(Long roomId) {
         Room room = getRoom(roomId);
 
-        return penaltyUserDrawResultRepository.findByRoomAndDrawRound(room, room.getDraw_round())
+        return penaltyUserDrawResultRepository.findByRoomAndDrawRound(room, room.getDrawRound())
                 .map(this::toPenaltyUserDrawResultResDto)
-                .orElseGet(() -> createPenaltyUserDrawResult(room, room.getDraw_round()));
+                .orElseGet(() -> createPenaltyUserDrawResult(room, room.getDrawRound()));
     }
 
     @Transactional
     public PenaltyDrawResultResDto drawPenalty(Long roomId) {
         Room room = getRoom(roomId);
 
-        return penaltyDrawResultRepository.findByRoomAndDrawRound(room, room.getDraw_round())
+        return penaltyDrawResultRepository.findByRoomAndDrawRound(room, room.getDrawRound())
                 .map(this::toPenaltyDrawResultResDto)
-                .orElseGet(() -> createPenaltyDrawResult(room, room.getDraw_round()));
+                .orElseGet(() -> createPenaltyDrawResult(room, room.getDrawRound()));
     }
 
     @Transactional
@@ -102,7 +102,18 @@ public class PenaltyService {
     public MissionCompleteResDto missionComplete(String authorizationHeader, Long roomId) {
         User user = getUserFromAuthorizationHeader(authorizationHeader);
 
-        int updated = roomRepository.completeMission(roomId);
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        PenaltyUserDrawResult drawResult = penaltyUserDrawResultRepository.findByRoomAndDrawRound(room, room.getDrawRound())
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+
+        String drawUserName = drawResult.getDrawUserList().get(drawResult.getWinnerIndex());
+
+        if(!drawUserName.equals(user.getNickname())) {
+           throw new RestApiException(GlobalErrorStatus._WRONG_DRAW_USER);
+        }
+
+        roomRepository.completeMission(roomId);
 
         return new MissionCompleteResDto(roomId);
     }
