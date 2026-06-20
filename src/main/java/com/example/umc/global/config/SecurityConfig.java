@@ -44,7 +44,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // 허용하는 Origins
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173"
+        )); // 허용하는 Origins
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); // 해당 Origins에서 처리가능한 Method
         config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // 허용된 Origin의 브라우저가 CORS 요청 시 보낼 수 있도록 허용할 요청 헤더
         config.setAllowCredentials(false); // Cross-Origin 요청에 쿠키 등의 인증 정보를 포함하지 않도록 설정. Credentials : 쿠키, 세션 쿠키, 브라우저 HTTP 인증 정보, 클라이언트 인증서 등
