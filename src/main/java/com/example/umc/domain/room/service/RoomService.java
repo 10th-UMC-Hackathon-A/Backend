@@ -193,6 +193,17 @@ public class RoomService {
                 .toList();
     }
 
+    public ParticipantNickNameResDto getParticipantNickName(String authorizationHeader, Long roomId) {
+        User user = authService.getUserFromAuthorizationHeader(authorizationHeader);
+        Room room = getMyActiveRoom(roomId);
+
+        if (!roomUserRepository.existsByRoomAndUser(room, user)) {
+            throw new RestApiException(AuthErrorStatus.INVALID_ID_TOKEN);
+        }
+
+        return new ParticipantNickNameResDto(user.getNickname());
+    }
+
     @Transactional(readOnly = true)
     public List<VoteStatusWithAliasResDto> getVoteStatusWithMembers(Long roomId) {
         Room room = getMyActiveRoom(roomId);

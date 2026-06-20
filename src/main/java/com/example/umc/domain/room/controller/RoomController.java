@@ -1,6 +1,5 @@
 package com.example.umc.domain.room.controller;
 
-import com.example.umc.domain.auth.service.AuthService;
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
@@ -89,6 +88,16 @@ public class RoomController implements RoomControllerDocs {
             ParticipateRoomReqDto request
     ) {
         return BaseResponse.onSuccess(roomService.participateRoom(request));
+    }
+
+    @GetMapping("/{roomId}/participants")
+    public BaseResponse<ParticipantNickNameResDto> createParticipant(
+            @RequestHeader("Authorization")
+            String authorizationHeader,
+            @PathVariable
+            Long roomId
+    ) {
+        return BaseResponse.onSuccess(roomService.getParticipantNickName(authorizationHeader, roomId));
     }
 
     @PostMapping("/vote")
