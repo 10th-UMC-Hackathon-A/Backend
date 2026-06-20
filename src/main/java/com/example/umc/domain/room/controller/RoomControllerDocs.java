@@ -2,6 +2,7 @@ package com.example.umc.domain.room.controller;
 
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
+import com.example.umc.domain.room.dto.request.TokenRefreshReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
 import com.example.umc.domain.room.dto.response.*;

@@ -5,6 +5,7 @@ public record ParticipantResDto(
         Long roomId,
         String nickName,
         String uid,
-        String accessToken
+        String accessToken,
+        String refreshToken
 ) {
 }

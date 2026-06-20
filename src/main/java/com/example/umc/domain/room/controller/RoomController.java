@@ -1,5 +1,6 @@
 package com.example.umc.domain.room.controller;
 
+import com.example.umc.domain.auth.service.AuthService;
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
