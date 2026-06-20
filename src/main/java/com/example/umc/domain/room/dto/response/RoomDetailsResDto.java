@@ -7,5 +7,6 @@ public record RoomDetailsResDto(
         String roomName,
         LocalDateTime voteStartedAt,
         LocalDateTime voteClosedAt,
-        Integer drawRound
+        Integer drawRound,
+        Integer participantedUserCount
 ) { }

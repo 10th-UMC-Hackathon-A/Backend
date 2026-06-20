@@ -66,7 +66,8 @@ public class RoomService {
     public RoomDetailsResDto getRoomDetails(Long roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
-        return toRoomDetailResDto(room);
+        Integer participantedUserCount = roomUserRepository.countByRoom(room);
+        return toRoomDetailResDto(room, participantedUserCount);
     }
 
     @Transactional
@@ -235,8 +236,15 @@ public class RoomService {
         return new RoomResDto(room.getRoomName(), room.getRoomId());
     }
 
-    private RoomDetailsResDto toRoomDetailResDto(Room room) {
-        return new RoomDetailsResDto(room.getRoomId(), room.getRoomName(), room.getVoteStartedAt(), room.getVoteClosedAt(), room.getDrawRound());
+    private RoomDetailsResDto toRoomDetailResDto(Room room, Integer roomUserCount) {
+        return new RoomDetailsResDto(
+                room.getRoomId(),
+                room.getRoomName(),
+                room.getVoteStartedAt(),
+                room.getVoteClosedAt(),
+                room.getDrawRound(),
+                roomUserCount
+        );
     }
 
     private VoteTypeResDto toVoteTypeResDto(VoteType voteType) {

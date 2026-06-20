@@ -1,5 +1,6 @@
 package com.example.umc.domain.penalty.entity;
 
+import com.example.umc.domain.penalty.enums.GameTypeEnum;
 import com.example.umc.domain.room.entity.Room;
 import com.example.umc.domain.room.entity.User;
 import com.example.umc.global.common.base.BaseEntity;
@@ -44,6 +45,10 @@ public class PenaltyUserDrawResult extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "penalty_type", nullable = false)
+    private GameTypeEnum penaltyType;
 
     @Column(name = "winner_index", nullable = false)
     private Integer winnerIndex;
