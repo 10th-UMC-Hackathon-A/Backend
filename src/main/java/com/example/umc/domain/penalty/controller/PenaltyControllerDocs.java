@@ -1,6 +1,7 @@
 package com.example.umc.domain.penalty.controller;
 
 import com.example.umc.domain.penalty.dto.request.PenaltyReqDto;
+import com.example.umc.domain.penalty.dto.response.MissionCompleteResDto;
 import com.example.umc.domain.penalty.dto.response.PenaltyDrawResultResDto;
 import com.example.umc.domain.penalty.dto.response.PenaltyResDto;
 import com.example.umc.domain.penalty.dto.response.PenaltyUserDrawResultResDto;
@@ -11,7 +12,10 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -69,5 +73,31 @@ public interface PenaltyControllerDocs {
     BaseResponse<String> deletePenalty(
             @Parameter(name = "penaltyId", description = "삭제할 벌칙 ID", in = ParameterIn.PATH, required = true)
             Long penaltyId
+    );
+
+    @Operation(
+            summary = "미션 완료",
+            description = "Authorization 헤더의 Bearer Access Token을 검증한 뒤, 해당 방의 미션 완료를 처리하고 결과를 반환합니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "미션 완료 성공")
+    })
+    BaseResponse<MissionCompleteResDto> missionComplete(
+            @Parameter(
+                    description = "Bearer Access Token",
+                    required = true,
+                    example = "Bearer eyJhbGciOiJIUzI1NiJ9..."
+            )
+            @RequestHeader("Authorization")
+            String authorizationHeader,
+
+            @Parameter(
+                    description = "방 ID",
+                    required = true,
+                    example = "1"
+            )
+            @RequestParam
+            Long roomId
     );
 }

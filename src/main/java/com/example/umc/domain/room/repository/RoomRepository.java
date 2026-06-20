@@ -32,4 +32,14 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                 and r.deletedAt is null
             """)
     int updateVoteTime(Long roomId, LocalDateTime voteStartedAt, LocalDateTime voteClosedAt);
+
+    @Modifying(clearAutomatically = true)
+    @Query("""
+        UPDATE Room r
+        SET r.draw_round = r.draw_round + 1,
+            r.voteClosedAt = null
+        WHERE r.roomId = :roomId
+            and r.deletedAt is null
+        """)
+    int completeMission(Long roomId);
 }
