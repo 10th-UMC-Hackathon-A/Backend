@@ -223,7 +223,15 @@ public class RoomService {
     }
 
     private void validateVoteOpen(Room room, LocalDateTime now) {
+
         if (room.getVoteClosedAt() != null && now.isAfter(room.getVoteClosedAt())) {
+
+            // 마감 후 5분이 지났는지 확인
+            if (now.isAfter(room.getVoteClosedAt().plusMinutes(5))) {
+                roomRepository.completeMission(room.getRoomId());
+                return;
+            }
+
             throw new RestApiException(GlobalErrorStatus._VOTE_CLOSED);
         }
     }

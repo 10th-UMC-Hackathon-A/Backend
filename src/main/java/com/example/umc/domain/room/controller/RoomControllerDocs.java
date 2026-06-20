@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.List;
 
@@ -92,7 +93,7 @@ public interface RoomControllerDocs {
             @ApiResponse(responseCode = "200", description = "투표 생성 성공")
     })
     BaseResponse<List<VoteStatusResDto>> createVote(
-            @Parameter(hidden = false)
+            @RequestHeader("Authorization")
             String authorizationHeader,
             @RequestBody(description = "투표 생성 요청 정보", required = true)
             VoteReqDto request
