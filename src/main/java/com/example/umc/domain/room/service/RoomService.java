@@ -84,6 +84,7 @@ public class RoomService {
                 .toList();
     }
 
+    @Transactional
     public RoomResDto updateRoom(Long roomId, RoomReqDto request) {
         Room room = getMyActiveRoom(roomId);
         int updatedCount = roomRepository.updateRoomName(request.roomName(), room.getRoomId());
@@ -156,7 +157,7 @@ public class RoomService {
         room = getMyActiveRoom(request.roomId());
         validateVoteOpen(room, LocalDateTime.now());
         VoteType voteType = voteTypeRepository.findByLabel(request.position())
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._VOTE_TYPE_NOT_FOUND));
 
         if (!roomUserRepository.existsByRoomAndUser(room, user)) {
             throw new RestApiException(AuthErrorStatus.INVALID_ROLE);
@@ -263,7 +264,7 @@ public class RoomService {
                 voteUserRepository.deleteByRoom(room);
                 roomRepository.completeMission(room.getRoomId());
 
-                return;
+                throw new RestApiException(GlobalErrorStatus._ROUND_TRANSITIONED);
             }
 
             throw new RestApiException(GlobalErrorStatus._VOTE_CLOSED);
