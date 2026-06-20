@@ -22,9 +22,11 @@ import com.example.umc.domain.room.repository.VoteTypeRepository;
 import com.example.umc.domain.room.repository.VoteUserRepository;
 import com.example.umc.global.common.exception.code.status.AuthErrorStatus;
 import com.example.umc.global.security.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,9 @@ public class RoomService {
     private final VoteTypeRepository voteTypeRepository;
     private final VoteUserRepository voteUserRepository;
     private final JwtUtil jwtUtil;
+
+    @Value("${vote.deadline-seconds:30}")
+    private long voteDeadlineSeconds;
 
     @Transactional
     public RoomResDto createRoom(RoomReqDto request) {
@@ -77,6 +82,10 @@ public class RoomService {
     public ParticipantResDto participateRoom(ParticipateRoomReqDto request) {
         Room room = roomRepository.findById(request.roomId())
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        LocalDateTime now = LocalDateTime.now();
+
+        startVoteIfNeeded(room, now);
+        validateVoteOpen(room, now);
 
         User user = userRepository.findByUid(request.uid())
                 .orElseGet(() -> userRepository.save(User.builder()
@@ -180,6 +189,18 @@ public class RoomService {
 
     private RoomResDto toRoomResDto(Room room) {
         return new RoomResDto(room.getRoomName(), room.getRoomId());
+    }
+
+    private void startVoteIfNeeded(Room room, LocalDateTime now) {
+        if (!room.isVoteStarted()) {
+            room.startVote(now, now.plusSeconds(voteDeadlineSeconds));
+        }
+    }
+
+    private void validateVoteOpen(Room room, LocalDateTime now) {
+        if (room.isVoteClosed(now)) {
+            throw new RestApiException(GlobalErrorStatus._VOTE_CLOSED);
+        }
     }
 
     private Room toRoom(RoomReqDto request) {
