@@ -36,17 +36,4 @@ public class Room extends BaseEntity {
 
     @Column(name = "vote_closed_at")
     private LocalDateTime voteClosedAt;
-
-    public boolean isVoteStarted() {
-        return voteStartedAt != null;
-    }
-
-    public boolean isVoteClosed(LocalDateTime now) {
-        return voteClosedAt != null && now.isAfter(voteClosedAt);
-    }
-
-    public void startVote(LocalDateTime voteStartedAt, LocalDateTime voteClosedAt) {
-        this.voteStartedAt = voteStartedAt;
-        this.voteClosedAt = voteClosedAt;
-    }
 }

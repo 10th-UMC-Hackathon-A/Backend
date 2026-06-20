@@ -192,13 +192,17 @@ public class RoomService {
     }
 
     private void startVoteIfNeeded(Room room, LocalDateTime now) {
-        if (!room.isVoteStarted()) {
-            room.startVote(now, now.plusSeconds(voteDeadlineSeconds));
+        if (room.getVoteStartedAt() == null) {
+            roomRepository.updateVoteTime(
+                    room.getRoomId(),
+                    now,
+                    now.plusSeconds(voteDeadlineSeconds)
+            );
         }
     }
 
     private void validateVoteOpen(Room room, LocalDateTime now) {
-        if (room.isVoteClosed(now)) {
+        if (room.getVoteClosedAt() != null && now.isAfter(room.getVoteClosedAt())) {
             throw new RestApiException(GlobalErrorStatus._VOTE_CLOSED);
         }
     }
