@@ -1,14 +1,11 @@
 package com.example.umc.domain.room.service;
 
+import com.example.umc.domain.penalty.repository.PenaltyUserDrawResultRepository;
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
-import com.example.umc.domain.room.dto.response.ParticipantResDto;
-import com.example.umc.domain.room.dto.response.RoomResDto;
-import com.example.umc.domain.room.dto.response.VoteStatusResDto;
-import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
-import com.example.umc.domain.room.dto.response.VoteTypeResDto;
+import com.example.umc.domain.room.dto.response.*;
 import com.example.umc.domain.room.entity.Room;
 import com.example.umc.domain.room.repository.RoomRepository;
 import com.example.umc.global.common.exception.RestApiException;
@@ -61,6 +58,12 @@ public class RoomService {
         return rooms.stream()
                 .map(this::toRoomResDto)
                 .toList();
+    }
+
+    public RoomDetailsResDto getRoomDetails(Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        return toRoomDetailResDto(room);
     }
 
     @Transactional
@@ -133,6 +136,8 @@ public class RoomService {
         User user = getUserFromAuthorizationHeader(authorizationHeader);
         Room room = getMyActiveRoom(request.roomId());
 
+        startVoteIfNeeded(room, LocalDateTime.now());
+        room = getMyActiveRoom(request.roomId());
         validateVoteOpen(room, LocalDateTime.now());
         VoteType voteType = voteTypeRepository.findByLabel(request.position())
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
@@ -212,6 +217,10 @@ public class RoomService {
         return new RoomResDto(room.getRoomName(), room.getRoomId());
     }
 
+    private RoomDetailsResDto toRoomDetailResDto(Room room) {
+        return new RoomDetailsResDto(room.getRoomId(), room.getRoomName(), room.getVoteStartedAt(), room.getVoteClosedAt(), room.getDrawRound());
+    }
+
     private VoteTypeResDto toVoteTypeResDto(VoteType voteType) {
         return new VoteTypeResDto(voteType.getVoteTypeId(), voteType.getLabel());
     }
@@ -245,7 +254,6 @@ public class RoomService {
                 .roomName(request.roomName())
                 .build();
     }
-
 
     private Room getMyActiveRoom(Long roomId) {
         if(!roomRepository.existsByRoomId(roomId)) {

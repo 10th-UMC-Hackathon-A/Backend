@@ -39,5 +39,5 @@ public class Room extends BaseEntity {
 
     @Builder.Default
     @Column(name = "draw_round", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private Integer draw_round = 0;
+    private Integer drawRound = 0;
 }
