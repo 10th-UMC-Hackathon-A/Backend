@@ -1,8 +1,15 @@
 package com.example.umc.domain.room.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public record VoteReqDto(
+        @NotNull(message = "roomId는 필수입니다.")
+        @Positive(message = "roomId는 1 이상이어야 합니다.")
         Long roomId,
-        //TODO- VoteType을 만든 이유가 확장성 떄문이였는데, Enum을 쓰면 Vote Type을 만든 이유가 없어지는거 같음. ..
+
+        @NotBlank(message = "투표 선택지는 필수입니다.")
         String position
 ) {
 }

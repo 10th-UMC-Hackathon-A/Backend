@@ -87,7 +87,7 @@ public class PenaltyService {
         int updatedCount = penaltyRepository.updatePenaltyName(penaltyId, request.label());
 
         if (updatedCount == 0) {
-            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+            throw new RestApiException(GlobalErrorStatus._PENALTY_NOT_FOUND);
         }
 
         return toPenaltyResDto(getPenalty(penaltyId));
@@ -103,14 +103,11 @@ public class PenaltyService {
     public MissionCompleteResDto missionComplete(String authorizationHeader, Long roomId) {
         User user = getUserFromAuthorizationHeader(authorizationHeader);
 
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        Room room = getRoom(roomId);
         PenaltyUserDrawResult drawResult = penaltyUserDrawResultRepository.findByRoomAndDrawRound(room, room.getDrawRound())
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._DRAW_RESULT_NOT_FOUND));
 
-        String drawUserName = drawResult.getDrawUserList().get(drawResult.getWinnerIndex());
-
-        if(!drawUserName.equals(user.getNickname())) {
+        if(!drawResult.getUser().getUserId().equals(user.getUserId())) {
            throw new RestApiException(GlobalErrorStatus._WRONG_DRAW_USER);
         }
 
@@ -122,19 +119,27 @@ public class PenaltyService {
 
     private Penalty getPenalty(Long penaltyId) {
         return penaltyRepository.findByPenaltyIdAndDeletedAtIsNull(penaltyId)
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._PENALTY_NOT_FOUND));
     }
 
     private Room getRoom(Long roomId) {
-        return roomRepository.findById(roomId)
-                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        if (!roomRepository.existsByRoomId(roomId)) {
+            throw new RestApiException(GlobalErrorStatus._ROOM_NOT_FOUND);
+        }
+
+        Room room = roomRepository.findByRoomIdAndDeletedAtIsNull(roomId);
+        if (room == null) {
+            throw new RestApiException(GlobalErrorStatus._ROOM_DELETED);
+        }
+
+        return room;
     }
 
     private PenaltyUserDrawResultResDto createPenaltyUserDrawResult(Room room, Integer drawRound) {
         List<VoteUser> voteUsers = voteUserRepository.findByRoom(room);
 
         if (voteUsers.isEmpty()) {
-            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+            throw new RestApiException(GlobalErrorStatus._DRAW_CANDIDATE_NOT_FOUND);
         }
 
         // 1. 랜덤 셔플
@@ -169,7 +174,7 @@ public class PenaltyService {
         List<Penalty> penalties = penaltyRepository.findAllByDeletedAtIsNull();
 
         if (penalties.isEmpty()) {
-            throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+            throw new RestApiException(GlobalErrorStatus._PENALTY_POOL_EMPTY);
         }
 
         // 1. 랜덤 셔플

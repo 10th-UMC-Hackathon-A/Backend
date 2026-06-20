@@ -7,6 +7,7 @@ import com.example.umc.domain.penalty.dto.response.PenaltyResDto;
 import com.example.umc.domain.penalty.dto.response.PenaltyUserDrawResultResDto;
 import com.example.umc.domain.penalty.service.PenaltyService;
 import com.example.umc.global.common.base.BaseResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ public class PenaltyController implements PenaltyControllerDocs {
 
     @PostMapping
     public BaseResponse<PenaltyResDto> createPenalty(
+            @Valid
             @RequestBody
             PenaltyReqDto request
     ) {
@@ -52,6 +54,7 @@ public class PenaltyController implements PenaltyControllerDocs {
     public BaseResponse<PenaltyResDto> updatePenalty(
             @RequestParam
             Long penaltyId,
+            @Valid
             @RequestBody
             PenaltyReqDto request
     ) {
