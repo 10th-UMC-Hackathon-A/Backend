@@ -21,5 +21,6 @@ jwt:
     secretKey: ${JWT_SECRET_KEY}
     expiration:
       access: 1800000 # 30분
+      refresh: ${JWT_TOKEN_EXPIRATION_REFRESH} # 14일
 vote:
   deadline-seconds: ${VOTE_DEADLINE_SECONDS:90}
