@@ -29,12 +29,15 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RoomService {
+
+    private static final Pattern NICKNAME_PATTERN = Pattern.compile("^[가-힣ㄱ-ㅎA-Za-z0-9]{2,8}$");
 
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
@@ -100,6 +103,8 @@ public class RoomService {
 
     @Transactional
     public ParticipantResDto participateRoom(ParticipateRoomReqDto request) {
+        validateNickname(request.nickName());
+
         Room room = roomRepository.findById(request.roomId())
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
         LocalDateTime now = LocalDateTime.now();
@@ -108,6 +113,10 @@ public class RoomService {
         room = roomRepository.findById(request.roomId())
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
         validateVoteOpen(room, now);
+
+        if (roomUserRepository.existsByRoomAndUser_NicknameAndUser_UidNot(room, request.nickName(), request.uid())) {
+            throw new RestApiException(GlobalErrorStatus._DUPLICATE_NICKNAME);
+        }
 
         User user = userRepository.findByUid(request.uid())
                 .orElseGet(() -> userRepository.save(User.builder()
@@ -131,6 +140,12 @@ public class RoomService {
         );
     }
 
+    private void validateNickname(String nickname) {
+        if (nickname == null || !NICKNAME_PATTERN.matcher(nickname).matches()) {
+            throw new RestApiException(GlobalErrorStatus._INVALID_NICKNAME_FORMAT);
+        }
+    }
+
     @Transactional
     public List<VoteStatusResDto> vote(String authorizationHeader, VoteReqDto request) {
         User user = getUserFromAuthorizationHeader(authorizationHeader);
@@ -146,7 +161,10 @@ public class RoomService {
             throw new RestApiException(AuthErrorStatus.INVALID_ROLE);
         }
 
-        voteUserRepository.deleteByRoomAndUser(room, user);
+        if (voteUserRepository.existsByRoomAndUser(room, user)) {
+            throw new RestApiException(GlobalErrorStatus._ALREADY_VOTED);
+        }
+
         voteUserRepository.save(VoteUser.builder()
                 .room(room)
                 .user(user)
@@ -241,7 +259,9 @@ public class RoomService {
 
             // 마감 후 5분이 지났는지 확인
             if (now.isAfter(room.getVoteClosedAt().plusMinutes(5))) {
+                voteUserRepository.deleteByRoom(room);
                 roomRepository.completeMission(room.getRoomId());
+
                 return;
             }
 
