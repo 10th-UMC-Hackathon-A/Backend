@@ -18,6 +18,7 @@ public enum GlobalErrorStatus implements BaseCodeInterface {
     _NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON404", "요청한 정보를 찾을 수 없습니다."),
     _METHOD_ARGUMENT_ERROR(HttpStatus.BAD_REQUEST, "COMMON405", "Argument Type이 올바르지 않습니다."),
     _REQUEST_FORMAT_ERROR(HttpStatus.BAD_REQUEST, "COMMON406", "요청 본문 형식이 올바르지 않습니다. Enum 값이나 다른 데이터 형식을 확인해주세요."),
+    _VOTE_CLOSED(HttpStatus.GONE, "ROOM410", "투표가 마감되었습니다. 페널티 조회로 이동하시오."),
     _INTERNAL_PAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "페이지 에러, 0 이상의 페이지를 입력해주세요");
 
     private final HttpStatus httpStatus;

@@ -3,10 +3,12 @@ package com.example.umc.domain.room.controller;
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
+import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
 import com.example.umc.domain.room.dto.response.ParticipantResDto;
 import com.example.umc.domain.room.dto.response.RoomResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
+import com.example.umc.domain.room.dto.response.VoteTypeResDto;
 import com.example.umc.global.common.base.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,6 +38,21 @@ public interface RoomControllerDocs {
             @ApiResponse(responseCode = "200", description = "투표 방 목록 조회 성공")
     })
     BaseResponse<List<RoomResDto>> getRoomList();
+
+    @Operation(summary = "투표 형식 생성", description = "투표 형식 라벨을 받아 새로운 투표 형식을 생성합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "투표 형식 생성 성공")
+    })
+    BaseResponse<VoteTypeResDto> createVoteType(
+            @RequestBody(description = "투표 형식 생성 요청 정보", required = true)
+            VoteTypeReqDto request
+    );
+
+    @Operation(summary = "투표 형식 목록 조회", description = "등록된 투표 형식 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "투표 형식 목록 조회 성공")
+    })
+    BaseResponse<List<VoteTypeResDto>> getVoteTypeList();
 
     @Operation(summary = "투표 방 수정", description = "투표 방 ID와 수정할 이름을 받아 투표 방 정보를 수정합니다.")
     @ApiResponses({
@@ -75,7 +92,7 @@ public interface RoomControllerDocs {
             @ApiResponse(responseCode = "200", description = "투표 생성 성공")
     })
     BaseResponse<List<VoteStatusResDto>> createVote(
-            @Parameter(hidden = true)
+            @Parameter(hidden = false)
             String authorizationHeader,
             @RequestBody(description = "투표 생성 요청 정보", required = true)
             VoteReqDto request
