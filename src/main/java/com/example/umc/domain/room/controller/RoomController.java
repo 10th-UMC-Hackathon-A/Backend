@@ -4,11 +4,7 @@ import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
 import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
-import com.example.umc.domain.room.dto.response.ParticipantResDto;
-import com.example.umc.domain.room.dto.response.RoomResDto;
-import com.example.umc.domain.room.dto.response.VoteStatusResDto;
-import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
-import com.example.umc.domain.room.dto.response.VoteTypeResDto;
+import com.example.umc.domain.room.dto.response.*;
 import com.example.umc.domain.room.service.RoomService;
 import com.example.umc.global.common.base.BaseResponse;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +39,14 @@ public class RoomController implements RoomControllerDocs {
     @GetMapping
     public BaseResponse<List<RoomResDto>> getRoomList() {
         return BaseResponse.onSuccess(roomService.getRooms());
+    }
+
+    @GetMapping("/details")
+    public BaseResponse<RoomDetailsResDto> getRoomDetails(
+            @RequestParam
+            Long roomId
+    ) {
+        return BaseResponse.onSuccess(roomService.getRoomDetails(roomId));
     }
 
     @PostMapping("/vote-types")
