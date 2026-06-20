@@ -13,6 +13,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "room")
 @Getter
@@ -28,6 +30,12 @@ public class Room extends BaseEntity {
 
     @Column(name = "room_name", nullable = false)
     private String roomName;
+
+    @Column(name = "vote_started_at")
+    private LocalDateTime voteStartedAt;
+
+    @Column(name = "vote_closed_at")
+    private LocalDateTime voteClosedAt;
 
     @Builder.Default
     @Column(name = "draw_round", nullable = false, columnDefinition = "INT DEFAULT 0")

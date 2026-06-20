@@ -2,11 +2,13 @@ package com.example.umc.domain.room.service;
 
 import com.example.umc.domain.room.dto.request.ParticipateRoomReqDto;
 import com.example.umc.domain.room.dto.request.RoomReqDto;
+import com.example.umc.domain.room.dto.request.VoteTypeReqDto;
 import com.example.umc.domain.room.dto.request.VoteReqDto;
 import com.example.umc.domain.room.dto.response.ParticipantResDto;
 import com.example.umc.domain.room.dto.response.RoomResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusResDto;
 import com.example.umc.domain.room.dto.response.VoteStatusWithAliasResDto;
+import com.example.umc.domain.room.dto.response.VoteTypeResDto;
 import com.example.umc.domain.room.entity.Room;
 import com.example.umc.domain.room.repository.RoomRepository;
 import com.example.umc.global.common.exception.RestApiException;
@@ -22,9 +24,11 @@ import com.example.umc.domain.room.repository.VoteTypeRepository;
 import com.example.umc.domain.room.repository.VoteUserRepository;
 import com.example.umc.global.common.exception.code.status.AuthErrorStatus;
 import com.example.umc.global.security.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +46,9 @@ public class RoomService {
     private final VoteUserRepository voteUserRepository;
     private final JwtUtil jwtUtil;
 
+    @Value("${vote.deadline-seconds:30}")
+    private long voteDeadlineSeconds;
+
     @Transactional
     public RoomResDto createRoom(RoomReqDto request) {
         Room room = toRoom(request);
@@ -53,6 +60,21 @@ public class RoomService {
         List<Room> rooms = roomRepository.findAll();
         return rooms.stream()
                 .map(this::toRoomResDto)
+                .toList();
+    }
+
+    @Transactional
+    public VoteTypeResDto createVoteType(VoteTypeReqDto request) {
+        VoteType voteType = VoteType.builder()
+                .label(request.label())
+                .build();
+        VoteType savedVoteType = voteTypeRepository.save(voteType);
+        return toVoteTypeResDto(savedVoteType);
+    }
+
+    public List<VoteTypeResDto> getVoteTypes() {
+        return voteTypeRepository.findAll().stream()
+                .map(this::toVoteTypeResDto)
                 .toList();
     }
 
@@ -77,6 +99,10 @@ public class RoomService {
     public ParticipantResDto participateRoom(ParticipateRoomReqDto request) {
         Room room = roomRepository.findById(request.roomId())
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        LocalDateTime now = LocalDateTime.now();
+
+        startVoteIfNeeded(room, now);
+        validateVoteOpen(room, now);
 
         User user = userRepository.findByUid(request.uid())
                 .orElseGet(() -> userRepository.save(User.builder()
@@ -180,6 +206,26 @@ public class RoomService {
 
     private RoomResDto toRoomResDto(Room room) {
         return new RoomResDto(room.getRoomName(), room.getRoomId());
+    }
+
+    private VoteTypeResDto toVoteTypeResDto(VoteType voteType) {
+        return new VoteTypeResDto(voteType.getVoteTypeId(), voteType.getLabel());
+    }
+
+    private void startVoteIfNeeded(Room room, LocalDateTime now) {
+        if (room.getVoteStartedAt() == null) {
+            roomRepository.updateVoteTime(
+                    room.getRoomId(),
+                    now,
+                    now.plusSeconds(voteDeadlineSeconds)
+            );
+        }
+    }
+
+    private void validateVoteOpen(Room room, LocalDateTime now) {
+        if (room.getVoteClosedAt() != null && now.isAfter(room.getVoteClosedAt())) {
+            throw new RestApiException(GlobalErrorStatus._VOTE_CLOSED);
+        }
     }
 
     private Room toRoom(RoomReqDto request) {
