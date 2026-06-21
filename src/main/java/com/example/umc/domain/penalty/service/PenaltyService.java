@@ -107,7 +107,7 @@ public class PenaltyService {
            throw new RestApiException(GlobalErrorStatus._WRONG_DRAW_USER);
         }
 
-        voteUserRepository.deleteByRoom(room);
+        voteUserRepository.deleteAllByRoomId(room.getRoomId());
         roomRepository.completeMission(roomId);
 
         return new MissionCompleteResDto(roomId);

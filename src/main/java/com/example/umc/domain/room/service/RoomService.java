@@ -261,7 +261,7 @@ public class RoomService {
 
             // 마감 후 5분이 지났는지 확인
             if (now.isAfter(room.getVoteClosedAt().plusMinutes(5))) {
-                voteUserRepository.deleteByRoom(room);
+                voteUserRepository.deleteAllByRoomId(room.getRoomId());
                 roomRepository.completeMission(room.getRoomId());
 
                 throw new RestApiException(GlobalErrorStatus._ROUND_TRANSITIONED);
