@@ -98,7 +98,7 @@ public interface RoomControllerDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "투표 방 참여자 닉네임 조회 성공")
     })
-    BaseResponse<ParticipantNickNameResDto> createParticipant(
+    BaseResponse<ParticipantNickNameResDto> getParticipantNickName(
             @RequestHeader("Authorization")
             String authorizationHeader,
             @Parameter(name = "roomId", description = "조회할 투표 방 ID", in = ParameterIn.PATH, required = true)

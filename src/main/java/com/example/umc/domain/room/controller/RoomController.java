@@ -95,7 +95,7 @@ public class RoomController implements RoomControllerDocs {
     }
 
     @GetMapping("/{roomId}/participants")
-    public BaseResponse<ParticipantNickNameResDto> createParticipant(
+    public BaseResponse<ParticipantNickNameResDto> getParticipantNickName(
             @RequestHeader("Authorization")
             String authorizationHeader,
             @PathVariable
