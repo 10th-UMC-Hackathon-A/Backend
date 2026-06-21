@@ -250,7 +250,7 @@ public class RoomService {
             roomRepository.updateVoteTime(
                     room.getRoomId(),
                     now,
-                    now.plusSeconds(voteDeadlineSeconds)
+                    now.plusMinutes(2)
             );
         }
     }
@@ -259,8 +259,8 @@ public class RoomService {
 
         if (room.getVoteClosedAt() != null && now.isAfter(room.getVoteClosedAt())) {
 
-            // 마감 후 5분이 지났는지 확인
-            if (now.isAfter(room.getVoteClosedAt().plusMinutes(5))) {
+            // 마감 후 2분이 지났는지 확인
+            if (now.isAfter(room.getVoteClosedAt().plusMinutes(2))) {
                 voteUserRepository.deleteAllByRoomId(room.getRoomId());
                 roomRepository.completeMission(room.getRoomId());
 
