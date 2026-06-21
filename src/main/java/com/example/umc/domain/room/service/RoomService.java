@@ -264,7 +264,7 @@ public class RoomService {
                 voteUserRepository.deleteAllByRoomId(room.getRoomId());
                 roomRepository.completeMission(room.getRoomId());
 
-                throw new RestApiException(GlobalErrorStatus._ROUND_TRANSITIONED);
+                return;
             }
 
             throw new RestApiException(GlobalErrorStatus._VOTE_CLOSED);
