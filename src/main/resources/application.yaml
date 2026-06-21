@@ -24,3 +24,5 @@ jwt:
       refresh: ${JWT_TOKEN_EXPIRATION_REFRESH} # 14일
 vote:
   deadline-seconds: ${VOTE_DEADLINE_SECONDS:90}
+server:
+  forward-headers-strategy: framework
